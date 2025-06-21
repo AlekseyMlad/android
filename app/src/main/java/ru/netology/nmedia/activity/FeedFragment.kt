@@ -2,8 +2,6 @@ package ru.netology.nmedia.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,7 +22,6 @@ class FeedFragment : Fragment() {
     private val viewModel: PostViewModel by activityViewModels()
     private lateinit var binding: FragmentFeedBinding // Используем binding
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout // Объявляем SwipeRefreshLayout
-    private val handler = Handler(Looper.getMainLooper())
 
 
     override fun onCreateView(
@@ -36,34 +33,9 @@ class FeedFragment : Fragment() {
         swipeRefreshLayout = binding.swipeRefreshLayout
 
 
-         fun updateUI() {
-            // Обновление UI на основе состояния данных из ViewModel
-            viewModel.data.observe(viewLifecycleOwner) { state ->
-                binding.progress.isVisible = state.loading
-                binding.errorGroup.isVisible = state.error
-                binding.emptyText.isVisible = state.empty
-                //binding.list.isVisible = state.posts
-                // TODO: Обновите RecyclerView или ListView с новыми данными из state.posts
-            }
-        }
-
-         fun refreshFeed() {
-            swipeRefreshLayout.isRefreshing = true
-
-            Thread {
-
-                viewModel.loadPosts()
-
-                // Обновляем UI в главном потоке
-                handler.post {
-                    swipeRefreshLayout.isRefreshing = false
-                    updateUI()
-                }
-            }.start()
-        }
-
         swipeRefreshLayout.setOnRefreshListener {
-            refreshFeed()
+            viewModel.loadPosts()
+            swipeRefreshLayout.isRefreshing = false
         }
 
 
