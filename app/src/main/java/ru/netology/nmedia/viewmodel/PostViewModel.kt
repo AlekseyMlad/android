@@ -54,7 +54,32 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             val currentFeedModel = _data.value ?: return@thread
             val updatedPosts = currentFeedModel.posts.map { post ->
                 if (post.id == id) {
-                    post.copy(likedByMe = !post.likedByMe)
+                    post.copy(likedByMe = false, likes = post.likes + 1)
+                } else {
+                    post
+                }
+            }
+
+
+            val updatedFeedModel = currentFeedModel.copy(posts = updatedPosts)
+            _data.postValue(updatedFeedModel)
+
+            try {
+                repository.likeById(id)
+            } catch (e: IOException) {
+                // Обработка ошибок (например, можно вернуть старое состояние)
+                _data.postValue(currentFeedModel)
+            }
+        }
+    }
+
+    fun unlikePost(id: Long) {
+        thread {
+            val currentFeedModel = _data.value ?: return@thread
+
+            val updatedPosts = currentFeedModel.posts.map { post ->
+                if (post.id == id) {
+                    post.copy(likedByMe = false, likes = post.likes - 1)
                 } else {
                     post
                 }
@@ -64,9 +89,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             _data.postValue(updatedFeedModel)
 
             try {
-                repository.likeById(id)
+                repository.unlikeById(id)
             } catch (e: IOException) {
-                // Обработка ошибок (например, можно вернуть старое состояние)
                 _data.postValue(currentFeedModel)
             }
         }
@@ -92,29 +116,6 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         edited.value = edited.value?.copy(content = text)
-    }
-
-    fun unlikePost(id: Long) {
-        thread {
-            val currentFeedModel = _data.value ?: return@thread
-
-            val updatedPosts = currentFeedModel.posts.map { post ->
-                if (post.id == id) {
-                    post.copy(likedByMe = false)
-                } else {
-                    post
-                }
-            }
-
-            val updatedFeedModel = currentFeedModel.copy(posts = updatedPosts)
-            _data.postValue(updatedFeedModel)
-
-            try {
-                repository.unlikeById(id)
-            } catch (e: IOException) {
-                _data.postValue(currentFeedModel)
-            }
-        }
     }
 
     fun removeById(id: Long) {
