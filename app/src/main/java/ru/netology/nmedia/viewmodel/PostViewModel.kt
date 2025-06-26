@@ -35,26 +35,24 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
 
     fun loadPosts() {
-        thread {
             // Начинаем загрузку
-            _data.postValue(FeedModel(loading = true))
-            try {
-                // Данные успешно получены
-                val posts = repository.getAll()
-                FeedModel(posts = posts, empty = posts.isEmpty())
-            } catch (e: IOException) {
-                // Получена ошибка
-                FeedModel(error = true)
-            }.also(_data::postValue)
-        }
+        _data.postValue(FeedModel(loading = true))
+        repository.getAllAsync(object: PostRepository.GetAllCallback{
+            override fun onSuccess(posts: List<Post>) {
+                _data.postValue(FeedModel(posts = posts, empty = posts.isEmpty()))
+            }
+
+            override fun onError(e: Exception) {
+                _data.postValue(FeedModel(error = true))
+            }
+        })
     }
 
     fun likePost(id: Long) {
-        thread {
-            val currentFeedModel = _data.value ?: return@thread
+            val currentFeedModel = _data.value ?: return
             val updatedPosts = currentFeedModel.posts.map { post ->
                 if (post.id == id) {
-                    post.copy(likedByMe = false, likes = post.likes + 1)
+                    post.copy(likedByMe = true, likes = post.likes + 1)
                 } else {
                     post
                 }
@@ -64,19 +62,17 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             val updatedFeedModel = currentFeedModel.copy(posts = updatedPosts)
             _data.postValue(updatedFeedModel)
 
-            try {
+//            try {
                 repository.likeById(id)
-            } catch (e: IOException) {
-                // Обработка ошибок (например, можно вернуть старое состояние)
-                _data.postValue(currentFeedModel)
-            }
-        }
+//            } catch (e: IOException) {
+//                // Обработка ошибок (например, можно вернуть старое состояние)
+//                _data.postValue(currentFeedModel)
+//            }
+
     }
 
     fun unlikePost(id: Long) {
-        thread {
-            val currentFeedModel = _data.value ?: return@thread
-
+            val currentFeedModel = _data.value ?: return
             val updatedPosts = currentFeedModel.posts.map { post ->
                 if (post.id == id) {
                     post.copy(likedByMe = false, likes = post.likes - 1)
@@ -88,12 +84,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             val updatedFeedModel = currentFeedModel.copy(posts = updatedPosts)
             _data.postValue(updatedFeedModel)
 
-            try {
                 repository.unlikeById(id)
-            } catch (e: IOException) {
-                _data.postValue(currentFeedModel)
-            }
-        }
+
     }
 
     fun save() {

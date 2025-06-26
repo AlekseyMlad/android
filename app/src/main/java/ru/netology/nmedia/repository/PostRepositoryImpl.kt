@@ -2,12 +2,16 @@ package ru.netology.nmedia.repository
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import ru.netology.nmedia.dto.Post
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 
@@ -37,33 +41,63 @@ class PostRepositoryImpl: PostRepository {
             }
     }
 
+    override fun getAllAsync(callback: PostRepository.GetAllCallback) {
+        val request: Request = Request.Builder()
+            .url("${BASE_URL}/api/posts")
+            .build()
+
+        client.newCall(request)
+            .enqueue(object: Callback {
+                override fun onResponse(call: Call, response: Response) {
+                    try {
+                        val posts =
+                            response.body?.string() ?: throw RuntimeException("body is null")
+                        callback.onSuccess(gson.fromJson(posts, typeToken.type))
+                    }catch (e: Exception){
+                        callback.onError(e)
+                    }
+                }
+
+                override fun onFailure(call: Call, e: IOException) {
+                    callback.onError(e)
+                }
+            } )
+    }
+
     override fun likeById(id: Long) {
-        try {
             val requestForLike = Request.Builder()
                 .post(RequestBody.create(null, ""))
                 .url("${BASE_URL}/api/posts/$id/likes")
                 .build()
 
-            client.newCall(requestForLike).execute()
+            client.newCall(requestForLike).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    println("Error liking post: ${e.message}")
+                }
+                override fun onResponse(call: Call, response: Response) {
 
-        } catch (e: Exception){
-            println("Error liking post: ${e.message}")
-        }
+                }
+            })
 
-    }
+
+            }
 
     override fun unlikeById(id: Long) {
-        try {
             val requestForUnlike = Request.Builder()
                 .delete()
                 .url("${BASE_URL}/api/posts/$id/likes")
                 .build()
 
-            client.newCall(requestForUnlike).execute()
+            client.newCall(requestForUnlike).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    println("Error unliking post: ${e.message}")
+                }
 
-        } catch (e: Exception){
-            println("Error unliking post: ${e.message}")
-        }
+                override fun onResponse(call: Call, response: Response) {
+
+                }
+            })
+
 
     }
 
@@ -73,9 +107,15 @@ class PostRepositoryImpl: PostRepository {
             .url("${BASE_URL}/api/slow/posts")
             .build()
 
-        client.newCall(request)
-            .execute()
-            .close()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("Error saving post: ${e.message}")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+
+            }
+        })
     }
 
     override fun removeById(id: Long) {
@@ -84,8 +124,14 @@ class PostRepositoryImpl: PostRepository {
             .url("${BASE_URL}/api/slow/posts/$id")
             .build()
 
-        client.newCall(request)
-            .execute()
-            .close()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("Error removing post: ${e.message}")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+
+            }
+        })
     }
 }
