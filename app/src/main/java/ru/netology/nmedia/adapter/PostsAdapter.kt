@@ -1,14 +1,18 @@
 package ru.netology.nmedia.adapter
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
+import ru.netology.nmedia.dto.AttachmentType
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.repository.PostRepositoryImpl.Companion.BASE_URL
 
 interface OnInteractionListener {
     fun onLike(post: Post) {}
@@ -42,10 +46,34 @@ class PostViewHolder(
             author.text = post.author
             published.text = post.published
             content.text = post.content
-            // в адаптере
             like.isChecked = post.likedByMe
             like.text = "${post.likes}"
-            //like.text = post.likes.toString()
+
+            val avatarEndpoint = "/avatars/${post.authorAvatar}"
+            val fullAvatarUrl = "$BASE_URL$avatarEndpoint"
+
+
+            Glide.with(itemView.context)
+                .load(fullAvatarUrl)
+                .placeholder(R.drawable.ic_baseline_loading_24)
+                .error(R.drawable.ic_baseline_error_24)
+                .circleCrop()
+                .timeout(10_000)
+                .into(binding.avatar)
+
+            if (post.attachment != null && post.attachment.type == AttachmentType.IMAGE) {
+                attachmentImage.visibility = View.VISIBLE // Показываем ImageView
+                val attachmentUrl = "$BASE_URL/images/${post.attachment.url}"
+
+                Glide.with(itemView.context)
+                    .load(attachmentUrl)
+                    .placeholder(R.drawable.ic_baseline_loading_24)
+                    .error(R.drawable.ic_baseline_error_24)
+                    .timeout(10_000)
+                    .into(attachmentImage)
+            } else {
+                attachmentImage.visibility = View.GONE // Скрываем ImageView, если нет вложения
+            }
 
             menu.setOnClickListener {
                 PopupMenu(it.context, it).apply {
@@ -56,6 +84,7 @@ class PostViewHolder(
                                 onInteractionListener.onRemove(post)
                                 true
                             }
+
                             R.id.edit -> {
                                 onInteractionListener.onEdit(post)
                                 true

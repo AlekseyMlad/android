@@ -13,9 +13,12 @@ private val empty = Post(
     id = 0,
     content = "",
     author = "",
+    authorAvatar = "",
     likedByMe = false,
     likes = 0,
-    published = ""
+    published = "",
+    views = 0,
+    attachment = null
 )
 
 class PostViewModel(application: Application) : AndroidViewModel(application) {
@@ -62,13 +65,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             val updatedFeedModel = currentFeedModel.copy(posts = updatedPosts)
             _data.postValue(updatedFeedModel)
 
-//            try {
                 repository.likeById(id)
-//            } catch (e: IOException) {
-//                // Обработка ошибок (например, можно вернуть старое состояние)
-//                _data.postValue(currentFeedModel)
-//            }
-
     }
 
     fun unlikePost(id: Long) {

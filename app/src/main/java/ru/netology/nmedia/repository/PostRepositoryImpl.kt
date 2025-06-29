@@ -18,12 +18,14 @@ import java.util.concurrent.TimeUnit
 class PostRepositoryImpl: PostRepository {
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .build()
     private val gson = Gson()
     private val typeToken = object : TypeToken<List<Post>>() {}
 
     companion object {
-        private const val BASE_URL = "http://10.0.2.2:9999"
+        const val BASE_URL = "http://10.0.2.2:9999"
         private val jsonType = "application/json".toMediaType()
 
     }
