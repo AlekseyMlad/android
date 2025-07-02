@@ -31,6 +31,7 @@ android {
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 
 
@@ -57,7 +58,7 @@ dependencies {
     def recyclerview_version = "1.4.0"
     def junit_version = "4.13.2"
     def ext_junit_version = "1.1.5"
-    def espresso_core_version = "3.5.1"
+    def espresso_core_version = "3.6.1"
     def activity_version = "1.10.1"
     def lifecycle_version = "2.8.7"
     def mdc_version = "1.12.0"
@@ -68,9 +69,13 @@ dependencies {
     def okhttp_version = "4.12.0"
     def play_services_base_version = "18.7.0"
     def core_desugaring_version = "2.1.5"
+    def retrofitgson_version = "2.11.0"
+    def okhttplogging_version = "4.12.0"
+    def glide_version = "4.16.0"
 
 
     implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "com.squareup.retrofit2:converter-gson:$retrofitgson_version"
     implementation "androidx.core:core-ktx:$core_version"
     implementation "androidx.appcompat:appcompat:$appcompat_version"
     implementation "androidx.constraintlayout:constraintlayout:$constraintlayout_version"
@@ -86,9 +91,12 @@ dependencies {
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
+    implementation "com.github.bumptech.glide:glide:$glide_version"
+    implementation "com.github.bumptech.glide:glide:$glide_version"
     implementation platform("com.google.firebase:firebase-bom:$firebase_version")
     implementation "com.google.firebase:firebase-messaging-ktx"
     implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
+    implementation "com.squareup.okhttp3:logging-interceptor:$okhttplogging_version"
     implementation "com.google.android.gms:play-services-base:$play_services_base_version"
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$core_desugaring_version"
     implementation('androidx.swiperefreshlayout:swiperefreshlayout:1.1.0')

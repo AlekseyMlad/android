@@ -42,12 +42,13 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         _data.postValue(FeedModel(loading = true))
         repository.getAllAsync(object: PostRepository.GetAllCallback{
             override fun onSuccess(posts: List<Post>) {
-                _data.postValue(FeedModel(posts = posts, empty = posts.isEmpty()))
+                _data.value = FeedModel(posts = posts, empty = posts.isEmpty())
             }
 
-            override fun onError(e: Exception) {
-                _data.postValue(FeedModel(error = true))
+            override fun onError(e: Throwable) {
+                _data.value = FeedModel(error = true)
             }
+
         })
     }
 
@@ -61,11 +62,20 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
 
-
             val updatedFeedModel = currentFeedModel.copy(posts = updatedPosts)
             _data.postValue(updatedFeedModel)
 
-                repository.likeById(id)
+        repository.likeById(id,
+            object : PostRepository.LikeCallback {
+                override fun onSuccess(post:Post) {
+                    updatePost(post)
+                }
+
+                override fun onError(e: Throwable) {
+                    loadPosts()
+                    println("Error liking post: ${e.message}")
+                }
+            })
     }
 
     fun unlikePost(id: Long) {
@@ -81,8 +91,30 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             val updatedFeedModel = currentFeedModel.copy(posts = updatedPosts)
             _data.postValue(updatedFeedModel)
 
-                repository.unlikeById(id)
+        repository.unlikeById(id,  object : PostRepository.LikeCallback {
+            override fun onSuccess(post:Post) {
+                updatePost(post)
+            }
 
+            override fun onError(e: Throwable) {
+                loadPosts()
+                println("Error unliking post: ${e.message}")
+            }
+        })
+
+    }
+
+    fun updatePost(updatedPost: Post) {
+        val currentFeedModel = _data.value ?: return
+        val updatedPosts = currentFeedModel.posts.map { post ->
+            if (post.id == updatedPost.id) {
+                updatedPost
+            } else {
+                post
+            }
+        }
+        val updatedFeedModel = currentFeedModel.copy(posts = updatedPosts)
+        _data.postValue(updatedFeedModel)
     }
 
     fun save() {
